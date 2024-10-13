@@ -10,18 +10,20 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.programmingassignment.data.Task
 import com.example.programmingassignment.ui.tasks.TaskItem
 import com.example.programmingassignment.util.FirestoreUtils
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 
 @Composable
 fun CompletedTasksScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
     val scope = rememberCoroutineScope()
+    val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
     var tasks by remember { mutableStateOf(listOf<Task>()) }
 
     // Load completed tasks
     LaunchedEffect(Unit) {
         scope.launch {
-            tasks = firestoreUtils.getTasks(isCompleted = true)
+            tasks = firestoreUtils.getTasks(currentUserEmail, isCompleted = true)
         }
     }
 

@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.programmingassignment.util.FirestoreUtils
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 @Composable
@@ -22,13 +23,14 @@ fun DashboardScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues
     var activeTasks by remember { mutableStateOf(0) }
     var importantTasks by remember { mutableStateOf(0) }
     var tasksDueToday by remember { mutableStateOf(0) }
+    val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
 
     // Load task data
     LaunchedEffect(Unit) {
         scope.launch {
-            completedTasks = firestoreUtils.getTasks(isCompleted = true).size
-            activeTasks = firestoreUtils.getTasks(isCompleted = false).size
-            importantTasks = firestoreUtils.getTasks(isCompleted = false, isImportant = true).size
+            completedTasks = firestoreUtils.getTasks(currentUserEmail, isCompleted = true).size
+            activeTasks = firestoreUtils.getTasks(currentUserEmail, isCompleted = false).size
+            importantTasks = firestoreUtils.getTasks(currentUserEmail, isCompleted = false, isImportant = true).size
             tasksDueToday = firestoreUtils.getCountOfDatedTasks(dueDate = getTodayDate())
         }
     }

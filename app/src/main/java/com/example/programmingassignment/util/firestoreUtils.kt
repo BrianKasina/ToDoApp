@@ -12,17 +12,18 @@ class FirestoreUtils(private val firestore: FirebaseFirestore) {
     private val taskCollection = firestore.collection("tasks")
 
     // Add or update a task
-    suspend fun addOrUpdateTask(task: Task) {
+    suspend fun addOrUpdateTask(task: Task, currentUserEmail: String) {
+        val taskWithUserEmail = task.copy(email = currentUserEmail) // Add current user's email to the task
         if (task.id.isNotEmpty()) {
-            taskCollection.document(task.id).set(task).await()
+            taskCollection.document(task.id).set(taskWithUserEmail).await()
         } else {
-            taskCollection.add(task).await()
+            taskCollection.add(taskWithUserEmail).await()
         }
     }
 
     // Get tasks by their status
-    suspend fun getTasks(isCompleted: Boolean? = null, isImportant: Boolean? = null): List<Task> {
-        var query: Query = taskCollection
+    suspend fun getTasks(currentUserEmail: String, isCompleted: Boolean? = null, isImportant: Boolean? = null): List<Task> {
+        var query: Query = taskCollection.whereEqualTo("email", currentUserEmail)
 
         if (isCompleted != null) {
             query = query.whereEqualTo("completed", isCompleted)

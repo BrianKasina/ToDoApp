@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.programmingassignment.data.Task
 import com.example.programmingassignment.util.FirestoreUtils
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 
@@ -19,7 +20,7 @@ fun TaskDetailsScreen(
 ) {
     // Create a coroutine scope
     val scope = rememberCoroutineScope() // Define the coroutine scope
-
+    val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
     var title by remember { mutableStateOf(task.title) }
     var description by remember { mutableStateOf(task.description) }
     var isImportant by remember { mutableStateOf(task.important) }
@@ -49,7 +50,7 @@ fun TaskDetailsScreen(
             // Save changes
             scope.launch {
                 firestoreUtils.addOrUpdateTask(
-                    task.copy(title = title, description = description, important = isImportant, dueDate = dueDate)
+                    task.copy(title = title, description = description, important = isImportant, dueDate = dueDate), currentUserEmail
                 )
                 onDismiss() // Optionally dismiss after saving
             }

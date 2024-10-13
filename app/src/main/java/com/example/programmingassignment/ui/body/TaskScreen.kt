@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.example.programmingassignment.data.Task
 import com.example.programmingassignment.ui.body.TaskDetailsScreen
 import com.example.programmingassignment.util.FirestoreUtils
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -31,6 +32,7 @@ import java.util.Date
 @Composable
 fun TaskScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
     val scope = rememberCoroutineScope()
+    val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
     var tasks by remember { mutableStateOf(listOf<Task>()) }
     var selectedFilter by remember { mutableStateOf("Pending") }
     var showDialog by remember { mutableStateOf(false) }
@@ -45,8 +47,8 @@ fun TaskScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
     LaunchedEffect(selectedFilter) {
         scope.launch {
             tasks = when (selectedFilter) {
-                "pending" -> firestoreUtils.getTasks(isCompleted = false, isImportant = false)
-                else -> firestoreUtils.getTasks(isCompleted = false, isImportant = false)
+                "pending" -> firestoreUtils.getTasks(currentUserEmail, isCompleted = false, isImportant = false)
+                else -> firestoreUtils.getTasks(currentUserEmail,isCompleted = false, isImportant = false)
             }
         }
     }
@@ -75,9 +77,9 @@ fun TaskScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
                     TaskItem(task = task, onTaskCheckedChange = { isChecked ->
                         scope.launch {
                             // Update task completion status in Firestore
-                            firestoreUtils.addOrUpdateTask(task.copy(completed = isChecked, id = task.id))
+                            firestoreUtils.addOrUpdateTask(task.copy(completed = isChecked, id = task.id), currentUserEmail)
                             // Optionally refresh the tasks after updating
-                            tasks = firestoreUtils.getTasks(isImportant = false, isCompleted = false)
+                            tasks = firestoreUtils.getTasks(currentUserEmail, isImportant = false, isCompleted = false)
                         }
                     }, onTaskClick = {
                         selectedTask = task
@@ -99,7 +101,7 @@ fun TaskScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
                                 showDetails = false
                                 scope.launch {
                                     // Optionally refresh the tasks after updating
-                                    tasks = firestoreUtils.getTasks(isCompleted = false, isImportant = false)
+                                    tasks = firestoreUtils.getTasks(currentUserEmail, isCompleted = false, isImportant = false)
                                 }
                             },
                             paddingValues = paddingValues
@@ -161,11 +163,11 @@ fun TaskScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
                                         description = newTaskDescription,
                                         dueDate = newTaskDueDate,
                                         important = isImportant
-                                    )
+                                    ), currentUserEmail
                                 )
 
                                 // Optionally refresh the tasks after adding
-                                tasks = firestoreUtils.getTasks(isImportant = false, isCompleted = false)
+                                tasks = firestoreUtils.getTasks(currentUserEmail, isImportant = false, isCompleted = false)
 
                                 // Reset the input fields
                                 newTaskTitle = ""

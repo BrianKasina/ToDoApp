@@ -19,6 +19,7 @@ import com.example.programmingassignment.data.Task
 import com.example.programmingassignment.ui.tasks.TaskItem
 import com.example.programmingassignment.ui.tasks.showDateTimePickerDialog
 import com.example.programmingassignment.util.FirestoreUtils
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -27,6 +28,7 @@ import java.util.Date
 @Composable
 fun ImportantTasksScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
     val scope = rememberCoroutineScope()
+    val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
     var tasks by remember { mutableStateOf(listOf<Task>()) }
     var showDetails by remember { mutableStateOf(false) }
     var selectedTask by remember { mutableStateOf<Task?>(null) }
@@ -39,7 +41,7 @@ fun ImportantTasksScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingV
     // Load important tasks
     LaunchedEffect(Unit) {
         scope.launch {
-            tasks = firestoreUtils.getTasks(isImportant = true, isCompleted = false)
+            tasks = firestoreUtils.getTasks(currentUserEmail, isImportant = true, isCompleted = false)
         }
     }
 
@@ -66,10 +68,10 @@ fun ImportantTasksScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingV
                         onTaskCheckedChange = { isChecked ->
                             // Update task completion status
                             scope.launch {
-                                firestoreUtils.addOrUpdateTask(task.copy(completed = isChecked))
+                                firestoreUtils.addOrUpdateTask(task.copy(completed = isChecked), currentUserEmail)
                                 // Optionally refresh the tasks after updating
                                 tasks =
-                                    firestoreUtils.getTasks(isImportant = true, isCompleted = false)
+                                    firestoreUtils.getTasks(currentUserEmail, isImportant = true, isCompleted = false)
                             }
                         },
                         onTaskClick = {
@@ -95,7 +97,7 @@ fun ImportantTasksScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingV
                             scope.launch {
                                 // Optionally refresh the tasks after updating
                                 tasks =
-                                    firestoreUtils.getTasks(isImportant = true, isCompleted = false)
+                                    firestoreUtils.getTasks(currentUserEmail, isImportant = true, isCompleted = false)
                             }
                         },
                         paddingValues = paddingValues
@@ -157,11 +159,11 @@ fun ImportantTasksScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingV
                                     description = newTaskDescription,
                                     dueDate = newTaskDueDate,
                                     important = isImportant
-                                )
+                                ), currentUserEmail
                             )
 
                             // Optionally refresh the tasks after adding
-                            tasks = firestoreUtils.getTasks(isImportant = false, isCompleted = false)
+                            tasks = firestoreUtils.getTasks(currentUserEmail, isImportant = false, isCompleted = false)
 
                             // Reset the input fields
                             newTaskTitle = ""
