@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "559146756518",
+    "project_id": "programming-assignment-ad3c6",
+    "storage_bucket": "programming-assignment-ad3c6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:559146756518:android:9fbc4849584ccf80cbc767",
+        "android_client_info": {
+          "package_name": "com.example.programmingassignment"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBO2L9R_ywAF4cvgS35y_Xaqlf3oXCt_qk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
