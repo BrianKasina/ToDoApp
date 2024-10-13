@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -49,7 +50,7 @@ fun DashboardComponent() {
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     ),
-                    title = { Text("Dashboard") },
+                    title = { Text("To Do App") },
                     navigationIcon = {
                         IconButton(onClick = {
                             scope.launch {
@@ -94,10 +95,26 @@ fun DrawerContent(drawerState: DrawerState, navController: NavHostController) {
         // Drawer Items with Icons
         Spacer(modifier = Modifier.height(20.dp))
         DrawerItem(
-            icon = Icons.Filled.Home,
+            icon = Icons.Filled.CheckCircle,
             label = "tasks",
             onClick = {
                 navController.navigate("tasks")
+                scope.launch { drawerState.close() }
+            }
+        )
+        DrawerItem(
+            icon = Icons.Filled.CheckCircle,
+            label = "Important tasks",
+            onClick = {
+                navController.navigate("important")
+                scope.launch { drawerState.close() }
+            }
+        )
+        DrawerItem(
+            icon = Icons.Filled.CheckCircle,
+            label = "Completed tasks",
+            onClick = {
+                navController.navigate("completed")
                 scope.launch { drawerState.close() }
             }
         )
@@ -110,16 +127,9 @@ fun DrawerContent(drawerState: DrawerState, navController: NavHostController) {
                 scope.launch { drawerState.close() }
             }
         )
-        DrawerItem(
-            icon = Icons.Filled.Settings,
-            label = "Settings",
-            onClick = {
-                scope.launch { drawerState.close() }
-            }
-        )
         Spacer(modifier = Modifier.weight(1f))
         DrawerItem(
-            icon = Icons.Filled.ExitToApp,
+            icon = Icons.AutoMirrored.Filled.ExitToApp,
             label = "Logout",
             onClick = {
                 // Sign out logic

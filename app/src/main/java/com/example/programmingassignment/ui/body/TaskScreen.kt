@@ -2,8 +2,12 @@ package com.example.programmingassignment.ui.tasks
 
 import android.app.TimePickerDialog
 import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.platform.LocalContext // Add this line
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -11,8 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.example.programmingassignment.data.Task
+import com.example.programmingassignment.ui.body.TaskDetailsScreen
 import com.example.programmingassignment.util.FirestoreUtils
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -27,36 +31,27 @@ fun TaskScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
     var newTaskTitle by remember { mutableStateOf("") }
     var newTaskDescription by remember { mutableStateOf("") }
     var newTaskDueDate by remember { mutableStateOf<Date?>(null) }
+    var isImportant by remember { mutableStateOf(false) }
+    var showDetails by remember { mutableStateOf(false) }
+    var selectedTask by remember { mutableStateOf<Task?>(null) }
 
     // Load tasks based on filter
     LaunchedEffect(selectedFilter) {
         scope.launch {
             tasks = when (selectedFilter) {
-                "Completed" -> firestoreUtils.getTasks(isCompleted = true)
-                "Important" -> firestoreUtils.getTasks(isImportant = true)
-                else -> firestoreUtils.getTasks(isCompleted = false)
+                "pending" -> firestoreUtils.getTasks(isCompleted = false, isImportant = false)
+                else -> {firestoreUtils.getTasks(isCompleted = false)}
             }
         }
     }
 
     val context = LocalContext.current // Get the current context
 
+    Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(paddingValues)
+        modifier = Modifier.fillMaxSize()
     ) {
-        // Filter Buttons
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Button(onClick = { selectedFilter = "Pending" }) { Text("Pending") }
-            Button(onClick = { selectedFilter = "Completed" }) { Text("Completed") }
-            Button(onClick = { selectedFilter = "Important" }) { Text("Important") }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Add Task Button
-        Button(onClick = { showDialog = true }) {
-            Text("Add Task")
-        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -65,9 +60,50 @@ fun TaskScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
             TaskItem(task = task, onTaskCheckedChange = { isChecked ->
                 scope.launch {
                     // Update task completion status in Firestore
-                    firestoreUtils.addOrUpdateTask(task.copy(isCompleted = isChecked))
+                    firestoreUtils.addOrUpdateTask(task.copy(completed = isChecked, id = task.id))
+                    // Optionally refresh the tasks after updating
+                    tasks = firestoreUtils.getTasks(isImportant = false, isCompleted = false)
                 }
+            }, onTaskClick = {
+                selectedTask = task
+                showDetails = true // Show task details
             })
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Floating Action Button to add a task
+        FloatingActionButton(
+            onClick = { showDialog = true },
+            shape = CircleShape,
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Icon(Icons.Filled.Add, "floating action button.")
+        }
+
+        if (showDetails && selectedTask != null) {
+            AlertDialog(
+                onDismissRequest = { showDetails = false },
+                title = { Text("Task Details") },
+                text = {
+                    TaskDetailsScreen(
+                        task = selectedTask!!,
+                        firestoreUtils = firestoreUtils,
+                        onDismiss = { showDetails = false
+                            scope.launch {
+                                // Optionally refresh the tasks after updating
+                                tasks = firestoreUtils.getTasks(isCompleted = false, isImportant = false)
+                            }
+                        },
+                        paddingValues = paddingValues
+                    )
+                },
+                confirmButton = {
+                    Button(onClick = { showDetails = false }) {
+                        Text("Close")
+                    }
+                }
+            )
         }
 
         // Task Dialog
@@ -87,6 +123,15 @@ fun TaskScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
                             onValueChange = { newTaskDescription = it },
                             label = { Text("Description") }
                         )
+
+                        // Checkbox to mark the task as important
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = isImportant,
+                                onCheckedChange = { isImportant = it }
+                            )
+                            Text("Mark as Important")
+                        }
                         // Due Date and Time Picker
                         Text("Due Date & Time: ${newTaskDueDate?.let { SimpleDateFormat("yyyy-MM-dd HH:mm").format(it) } ?: "Not set"}")
                         Button(onClick = {
@@ -107,9 +152,14 @@ fun TaskScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
                                 Task(
                                     title = newTaskTitle,
                                     description = newTaskDescription,
-                                    dueDate = newTaskDueDate
+                                    dueDate = newTaskDueDate,
+                                    important= isImportant
                                 )
                             )
+
+                            //optionally refresh the page after adding a task
+                            tasks = firestoreUtils.getTasks(isImportant = false, isCompleted = false)
+
                             // Reset the input fields
                             newTaskTitle = ""
                             newTaskDescription = ""
@@ -128,7 +178,7 @@ fun TaskScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
             )
         }
     }
-}
+}}
 
 fun showDateTimePickerDialog(context: Context, onDateTimeSelected: (Date) -> Unit) {
     val calendar = Calendar.getInstance()
@@ -156,15 +206,19 @@ fun showDateTimePickerDialog(context: Context, onDateTimeSelected: (Date) -> Uni
 }
 
 @Composable
-fun TaskItem(task: Task, onTaskCheckedChange: (Boolean) -> Unit) {
+fun TaskItem(task: Task, onTaskCheckedChange: (Boolean) -> Unit, onTaskClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                    onClick = onTaskClick)
+            ,
+        verticalAlignment = Alignment.Top
     ) {
         // Checkbox for important and pending tasks
-        if (!task.isCompleted) {
+        if (!task.completed) {
             Checkbox(
-                checked = task.isCompleted,
+                checked = task.completed,
                 onCheckedChange = onTaskCheckedChange
             )
         } else {
@@ -176,7 +230,7 @@ fun TaskItem(task: Task, onTaskCheckedChange: (Boolean) -> Unit) {
             )
         }
 
-        Text(text = task.title, style = MaterialTheme.typography.bodyLarge)
+        Text(text = task.description, style = MaterialTheme.typography.bodyMedium)
 
         // Display Due Date and Time
         task.dueDate?.let {

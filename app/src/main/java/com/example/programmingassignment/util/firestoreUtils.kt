@@ -23,14 +23,16 @@ class FirestoreUtils(private val firestore: FirebaseFirestore) {
         var query: Query = taskCollection
 
         if (isCompleted != null) {
-            query = query.whereEqualTo("Completed", isCompleted)
+            query = query.whereEqualTo("completed", isCompleted)
         }
 
         if (isImportant != null) {
-            query = query.whereEqualTo("Important", isImportant)
+            query = query.whereEqualTo("important", isImportant)
         }
 
-        return query.get().await().toObjects(Task::class.java)
+        return query.get().await().documents.map { document ->
+            document.toObject(Task::class.java)?.copy(id = document.id) // Copy the document ID
+        }.filterNotNull()
     }
 
     // Delete task

@@ -10,7 +10,8 @@ import androidx.navigation.compose.composable
 import com.example.programmingassignment.util.AuthUtils
 import com.example.programmingassignment.ui.body.ProfileScreen // Import your screens here
 import com.example.programmingassignment.ui.dashboard.MainContent // Import your dashboard content
-import com.example.programmingassignment.ui.auth.LoginRegisterScreen
+import com.example.programmingassignment.ui.body.CompletedTasksScreen
+import com.example.programmingassignment.ui.body.ImportantTasksScreen
 import com.example.programmingassignment.ui.tasks.TaskScreen
 import com.example.programmingassignment.util.FirestoreUtils
 import com.google.firebase.auth.FirebaseAuth
@@ -26,15 +27,17 @@ fun AppNavigator(navController: NavHostController, paddingValues: PaddingValues)
         composable("profile") {
             ProfileScreen(authUtils = AuthUtils(FirebaseAuth.getInstance()), paddingValues = paddingValues) // Profile screen content
         }
-        composable("dialysis") {
-            // Dialysis screen content
+        composable("important") {
+
+            ImportantTasksScreen(firestoreUtils = FirestoreUtils(FirebaseFirestore.getInstance()), paddingValues = paddingValues)
         }
         composable("tasks") {
             TaskScreen(firestoreUtils = FirestoreUtils(FirebaseFirestore.getInstance()), paddingValues = paddingValues)
-            // Nephrologist screen content
+
         }
-        composable("appointment") {
-            // Appointment screen content
+        composable("completed") {
+            CompletedTasksScreen(firestoreUtils = FirestoreUtils(FirebaseFirestore.getInstance()), paddingValues = paddingValues)
+
         }
         // You can add more screens here
     }
