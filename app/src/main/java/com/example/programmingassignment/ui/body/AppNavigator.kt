@@ -11,6 +11,7 @@ import com.example.programmingassignment.util.AuthUtils
 import com.example.programmingassignment.ui.body.ProfileScreen // Import your screens here
 import com.example.programmingassignment.ui.dashboard.MainContent // Import your dashboard content
 import com.example.programmingassignment.ui.body.CompletedTasksScreen
+import com.example.programmingassignment.ui.body.DashboardScreen
 import com.example.programmingassignment.ui.body.ImportantTasksScreen
 import com.example.programmingassignment.ui.tasks.TaskScreen
 import com.example.programmingassignment.util.FirestoreUtils
@@ -38,6 +39,10 @@ fun AppNavigator(navController: NavHostController, paddingValues: PaddingValues)
         composable("completed") {
             CompletedTasksScreen(firestoreUtils = FirestoreUtils(FirebaseFirestore.getInstance()), paddingValues = paddingValues)
 
+        }
+
+        composable("Dashboard"){
+            DashboardScreen(firestoreUtils = FirestoreUtils(FirebaseFirestore.getInstance()), paddingValues = paddingValues)
         }
         // You can add more screens here
     }

@@ -1,8 +1,11 @@
 package com.example.programmingassignment.ui.body
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.programmingassignment.R
 import com.example.programmingassignment.util.AuthUtils
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun ProfileScreen(authUtils: AuthUtils, paddingValues: PaddingValues) {
@@ -27,29 +31,61 @@ fun ProfileScreen(authUtils: AuthUtils, paddingValues: PaddingValues) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues),
+            .padding(paddingValues)
+            .background(MaterialTheme.colorScheme.background), // Optional background color
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Profile Picture
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Profile Picture with a border
         Image(
             painter = painterResource(R.drawable.img), // Placeholder image
             contentDescription = "Profile Picture",
             modifier = Modifier
                 .size(100.dp)
-                .clip(CircleShape),
+                .clip(CircleShape)
+                .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape), // Adding a border to the image
             contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Display user's name and email from Firebase
-        Text(text = userName, style = MaterialTheme.typography.titleLarge)
-        Text(text = userEmail, style = MaterialTheme.typography.bodyMedium)
+        // User Info Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(8.dp)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.Start // Aligning text to the left
+            ) {
+                Text(text = userName, style = MaterialTheme.typography.headlineMedium) // Larger font for name
+                Text(text = userEmail, style = MaterialTheme.typography.bodyMedium)
 
-        Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-        // Additional Profile Details (if available)
-        ProfileDetailRow(label = "Phone Number", value = currentUser?.phoneNumber ?: "No phone number")
-        // You can add more fields here like emergency contact if available in the user profile
+                // Additional Profile Details
+                ProfileDetailRow(label = "Phone Number", value = currentUser?.phoneNumber ?: "No phone number")// Add more fields as necessary
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Action Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Button(onClick = {
+                        AuthUtils(FirebaseAuth.getInstance()).signOut()
+                    }) {
+                        Text("Log Out")
+                    }
+                }
+            }
+        }
     }
 }
 

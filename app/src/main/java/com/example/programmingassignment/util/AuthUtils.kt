@@ -3,6 +3,7 @@ package com.example.programmingassignment.util
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import java.util.Date
 
 class AuthUtils(private val auth: FirebaseAuth) {
 
@@ -71,4 +72,6 @@ class AuthUtils(private val auth: FirebaseAuth) {
         authStateListener?.let { auth.removeAuthStateListener(it) }
         authStateListener = null
     }
+
+
 }

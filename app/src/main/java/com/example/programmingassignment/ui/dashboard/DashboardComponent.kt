@@ -23,9 +23,13 @@ import com.example.programmingassignment.util.AuthUtils
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.programmingassignment.navigation.AppNavigator
+import com.example.programmingassignment.ui.body.DashboardScreen
+import com.example.programmingassignment.util.FirestoreUtils
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,7 +71,12 @@ fun DashboardComponent() {
                             modifier = Modifier
                                 .size(50.dp)
                                 .padding(start = 8.dp, end = 8.dp)
-                                .clickable { showMenu = !showMenu }
+                                .clickable (
+                                    onClick = {
+                                        navController.navigate("profile")
+                                        scope.launch { drawerState.close() }
+                                    }
+                                )
                         )
                     }
                 )
@@ -95,6 +104,15 @@ fun DrawerContent(drawerState: DrawerState, navController: NavHostController) {
         // Drawer Items with Icons
         Spacer(modifier = Modifier.height(20.dp))
         DrawerItem(
+            icon = Icons.Filled.Home,
+            label = "Dashboard",
+            onClick = {
+                // Navigate to Profile Screen
+                navController.navigate("dashboard")
+                scope.launch { drawerState.close() }
+            }
+        )
+        DrawerItem(
             icon = Icons.Filled.CheckCircle,
             label = "tasks",
             onClick = {
@@ -118,15 +136,7 @@ fun DrawerContent(drawerState: DrawerState, navController: NavHostController) {
                 scope.launch { drawerState.close() }
             }
         )
-        DrawerItem(
-            icon = Icons.Filled.Person,
-            label = "Profile",
-            onClick = {
-                // Navigate to Profile Screen
-                navController.navigate("profile")
-                scope.launch { drawerState.close() }
-            }
-        )
+
         Spacer(modifier = Modifier.weight(1f))
         DrawerItem(
             icon = Icons.AutoMirrored.Filled.ExitToApp,
@@ -180,12 +190,7 @@ fun DrawerItem(icon: ImageVector, label: String, onClick: () -> Unit) {
 
 @Composable
 fun MainContent(paddingValues: PaddingValues) {
-    Text(
-        text = "Welcome to the Dashboard!",
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-    )
+    DashboardScreen(firestoreUtils = FirestoreUtils(FirebaseFirestore.getInstance()), paddingValues = paddingValues)
 }
 
 @Preview(showBackground = true)
