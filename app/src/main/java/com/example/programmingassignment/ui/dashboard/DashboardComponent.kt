@@ -105,7 +105,7 @@ fun DrawerContent(drawerState: DrawerState, navController: NavHostController) {
         Spacer(modifier = Modifier.height(20.dp))
         DrawerItem(
             icon = Icons.Filled.Home,
-            label = "Dashboard",
+            label = "Home",
             onClick = {
                 // Navigate to Profile Screen
                 navController.navigate("dashboard")
@@ -113,7 +113,7 @@ fun DrawerContent(drawerState: DrawerState, navController: NavHostController) {
             }
         )
         DrawerItem(
-            icon = Icons.Filled.CheckCircle,
+            icon = Icons.Filled.Edit,
             label = "tasks",
             onClick = {
                 navController.navigate("tasks")
@@ -121,7 +121,7 @@ fun DrawerContent(drawerState: DrawerState, navController: NavHostController) {
             }
         )
         DrawerItem(
-            icon = Icons.Filled.CheckCircle,
+            icon = Icons.Filled.Place,
             label = "Important tasks",
             onClick = {
                 navController.navigate("important")
@@ -160,16 +160,14 @@ fun DrawerHeader() {
     ) {
         // Placeholder for profile picture (replace with actual image if available)
         Image(
-            painter = painterResource(R.drawable.img), // Add a placeholder image in resources
+            painter = painterResource(R.drawable.roboprofile), // Add a placeholder image in resources
             contentDescription = "Profile Picture",
             modifier = Modifier
-                .size(80.dp)
+                .size(100.dp)
                 .clip(CircleShape),
             contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.height(12.dp))
-        Text(text = "John Doe", style = MaterialTheme.typography.titleMedium)
-        Text(text = "john.doe@example.com", style = MaterialTheme.typography.bodyMedium)
     }
 }
 

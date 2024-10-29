@@ -9,5 +9,7 @@ data class Task(
     val description: String = "",
     val completed: Boolean = false,
     val important: Boolean = false,
-    var dueDate: Date? = null // This will hold both date and time
+    var dueDate: Date? = null, // This will hold both date and time
+    var dateCompleted: Date? = null, // This will hold the date when the task was completed
+    var recurrence : String? = null
 )

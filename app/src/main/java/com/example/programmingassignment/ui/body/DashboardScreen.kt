@@ -1,39 +1,69 @@
 package com.example.programmingassignment.ui.body
 
-
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import java.util.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.programmingassignment.data.Task
+import com.example.programmingassignment.ui.tasks.TaskItem
 import com.example.programmingassignment.util.FirestoreUtils
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import java.util.*
 
 @Composable
 fun DashboardScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues) {
     val scope = rememberCoroutineScope()
-    var completedTasks by remember { mutableStateOf(0) }
-    var activeTasks by remember { mutableStateOf(0) }
-    var importantTasks by remember { mutableStateOf(0) }
-    var tasksDueToday by remember { mutableStateOf(0) }
     val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
+    var today = Calendar.getInstance(TimeZone.getDefault()).apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.time
 
-    // Load task data
-    LaunchedEffect(Unit) {
-        scope.launch {
-            completedTasks = firestoreUtils.getTasks(currentUserEmail, isCompleted = true).size
-            activeTasks = firestoreUtils.getTasks(currentUserEmail, isCompleted = false).size
-            importantTasks = firestoreUtils.getTasks(currentUserEmail, isCompleted = false, isImportant = true).size
-            tasksDueToday = firestoreUtils.getCountOfDatedTasks(dueDate = getTodayDate())
+    // State for tasks grouped by completion status
+    var incompleteTasks by remember { mutableStateOf(listOf<Task>()) }
+    var completedTasks by remember { mutableStateOf(listOf<Task>()) }
+
+    // Expanded states for dropdown visibility
+    var incompleteExpanded by remember { mutableStateOf(false) }
+    var completedExpanded by remember { mutableStateOf(false) }
+
+    // Load tasks with real-time updates
+    // Separate DisposableEffect for incomplete tasks
+    DisposableEffect(Unit) {
+        firestoreUtils.getTasks(
+            currentUserEmail = currentUserEmail,
+            isCompleted = false,
+            dueDate = today
+        ) { tasks ->
+            incompleteTasks = tasks
+            Log.d("DashboardScreen", "Incomplete tasks fetched: ${tasks.size} tasks for $today")
+        }
+        firestoreUtils.getCompletedTasks(
+            currentUserEmail = currentUserEmail,
+            completionDate = today
+        ) { tasks ->
+            completedTasks = tasks
+            Log.d("DashboardScreen", "Completed tasks fetched: ${tasks.size} tasks for $today")
+        }
+
+        onDispose {
+            firestoreUtils.removeListener()
         }
     }
+
 
     Column(
         modifier = Modifier
@@ -43,61 +73,85 @@ fun DashboardScreen(firestoreUtils: FirestoreUtils, paddingValues: PaddingValues
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Dashboard",
+            text = "My Day",
             style = MaterialTheme.typography.displayMedium.copy(
-                color = MaterialTheme.colorScheme.surfaceVariant, // Text color
-                fontWeight = FontWeight.Bold // Bold text
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                fontWeight = FontWeight.Bold
             )
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Display task statistics in cards with different colors
-        TaskStatCard(label = "Completed Tasks", value = completedTasks, cardColor = Color(0xFF4CAF50)) // Green
-        TaskStatCard(label = "Active Tasks", value = activeTasks, cardColor = Color(0xFF2196F3)) // Blue
-        TaskStatCard(label = "Important Tasks", value = importantTasks, cardColor = Color(0xFFFFC107)) // Yellow
-        TaskStatCard(label = "Tasks Due Today", value = tasksDueToday, cardColor = Color(0xFFF44336)) // Red
+        // Incomplete Tasks for Today Dropdown
+        DropdownCard(
+            label = "Tasks for Today",
+            tasks = incompleteTasks,
+            expanded = incompleteExpanded,
+            onExpandedChange = { incompleteExpanded = !incompleteExpanded },
+            onTaskCheckedChange = { task ->
+                scope.launch {
+                    firestoreUtils.addOrUpdateTask(task.copy(completed = true), currentUserEmail)
+                }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Completed Tasks for Today Dropdown
+        DropdownCard(
+            label = "Completed Tasks for Today",
+            tasks = completedTasks,
+            expanded = completedExpanded,
+            onExpandedChange = { completedExpanded = !completedExpanded },
+            onTaskCheckedChange = {}  // Completed tasks don't need to be marked again
+        )
     }
 }
 
 @Composable
-fun TaskStatCard(label: String, value: Int, cardColor: Color) {
-    var visible by remember { mutableStateOf(false) }
-
-    LaunchedEffect(value) {
-        visible = true
-    }
-
-    AnimatedVisibility(visible) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .height(100.dp),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            colors = CardDefaults.cardColors(containerColor = cardColor) // Set the card color here
-        ) {
+fun DropdownCard(
+    label: String,
+    tasks: List<Task>,
+    expanded: Boolean,
+    onExpandedChange: () -> Unit,
+    onTaskCheckedChange: (Task) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = label, style = MaterialTheme.typography.titleLarge)
-                Text(text = value.toString(), style = MaterialTheme.typography.displayLarge)
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(onClick = onExpandedChange) {
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.ArrowDropDown else Icons.Default.PlayArrow,
+                        contentDescription = null
+                    )
+                }
+            }
+            AnimatedVisibility(visible = expanded) {
+                LazyColumn {
+                    items(tasks) { task ->
+                        TaskItem(
+                            task = task,
+                            onTaskCheckedChange = { onTaskCheckedChange(task) },
+                            onTaskClick = {} // Add additional click handling if needed
+                        )
+                    }
+                }
             }
         }
     }
-}
-
-// Utility function to get today's date (modify based on your requirements)
-fun getTodayDate(): Date {
-    val calendar = Calendar.getInstance()
-    calendar.set(Calendar.HOUR_OF_DAY, 0)
-    calendar.set(Calendar.MINUTE, 0)
-    calendar.set(Calendar.SECOND, 0)
-    calendar.set(Calendar.MILLISECOND, 0)
-    return calendar.time
 }

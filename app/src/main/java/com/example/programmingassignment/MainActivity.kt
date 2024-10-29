@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import com.example.programmingassignment.ui.auth.LoginRegisterScreen
 import com.example.programmingassignment.ui.dashboard.DashboardComponent
+import com.example.programmingassignment.ui.theme.MyAppTheme
 import com.example.programmingassignment.util.AuthUtils
 import com.google.firebase.auth.FirebaseAuth
 
@@ -20,6 +21,7 @@ class MainActivity : ComponentActivity() {
         authUtils = AuthUtils(firebaseAuth)
 
         setContent {
+            MyAppTheme {
             var isAuthenticated by remember { mutableStateOf(authUtils.isAuthenticated()) }
 
             LaunchedEffect(Unit) {
@@ -34,6 +36,7 @@ class MainActivity : ComponentActivity() {
                 LoginRegisterScreen(authUtils) {
                     isAuthenticated = true
                 }
+            }
             }
         }
     }

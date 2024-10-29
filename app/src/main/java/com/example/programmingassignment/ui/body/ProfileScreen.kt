@@ -25,7 +25,6 @@ fun ProfileScreen(authUtils: AuthUtils, paddingValues: PaddingValues) {
     val currentUser = authUtils.getCurrentUser()
 
     // User's information to be displayed
-    val userName = currentUser?.displayName ?: "Unknown User"
     val userEmail = currentUser?.email ?: "No email available"
 
     Column(
@@ -39,7 +38,7 @@ fun ProfileScreen(authUtils: AuthUtils, paddingValues: PaddingValues) {
 
         // Profile Picture with a border
         Image(
-            painter = painterResource(R.drawable.img), // Placeholder image
+            painter = painterResource(R.drawable.walleprofile), // Placeholder image
             contentDescription = "Profile Picture",
             modifier = Modifier
                 .size(100.dp)
@@ -63,13 +62,11 @@ fun ProfileScreen(authUtils: AuthUtils, paddingValues: PaddingValues) {
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.Start // Aligning text to the left
             ) {
-                Text(text = userName, style = MaterialTheme.typography.headlineMedium) // Larger font for name
                 Text(text = userEmail, style = MaterialTheme.typography.bodyMedium)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Additional Profile Details
-                ProfileDetailRow(label = "Phone Number", value = currentUser?.phoneNumber ?: "No phone number")// Add more fields as necessary
 
                 Spacer(modifier = Modifier.height(16.dp))
 
